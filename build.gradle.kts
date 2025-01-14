@@ -13,8 +13,7 @@ plugins {
 
 val myGroup = "com.github.pgreze".also { group = it }
 val myArtifactId = "kotlin-process"
-val tagVersion = System.getenv("GITHUB_REF")?.split('/')?.last()
-val myVersion = (tagVersion?.trimStart('v') ?: "WIP").also { version = it }
+val myVersion = "1.5.1"
 val myDescription = "Kotlin friendly way to run an external process".also { description = it }
 val githubUrl = "https://github.com/pgreze/$myArtifactId"
 
@@ -72,13 +71,6 @@ dependencies {
 // Publishing
 //
 
-val propOrEnv: (String, String) -> String? = { key, envName ->
-    project.properties.getOrElse(key, defaultValue = { System.getenv(envName) })?.toString()
-}
-
-val ossrhUsername = propOrEnv("ossrh.username", "OSSRH_USERNAME")
-val ossrhPassword = propOrEnv("ossrh.password", "OSSRH_PASSWORD")
-
 publishing {
     publications {
         create<MavenPublication>("maven") {
@@ -103,51 +95,32 @@ publishing {
                         id.set("pgreze")
                         name.set("Pierrick Greze")
                     }
+                    developer {
+                        id.set("StefanLobbenmeier")
+                        name.set("Stefan Lobbenmeier")
+                    }
                 }
                 scm {
                     connection.set("$githubUrl.git")
-                    developerConnection.set("scm:git:ssh://github.com:pgreze/$myArtifactId.git")
+                    developerConnection.set("scm:git:ssh://github.com:StefanLobbenmeier/$myArtifactId.git")
                     url.set(githubUrl)
                 }
             }
         }
     }
+
     repositories {
         maven {
-            name = "sonatype"
-            setUrl("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = ossrhUsername
-                password = ossrhPassword
-            }
-        }
-    }
-}
-mapOf(
-    "signing.keyId" to "SIGNING_KEY_ID",
-    "signing.password" to "SIGNING_PASSWORD",
-    "signing.secretKeyRingFile" to "SIGNING_SECRET_KEY_RING_FILE",
-).forEach { (key, envName) ->
-    val value = propOrEnv(key, envName)
-        ?.let {
-            if (key.contains("File")) {
-                rootProject.file(it).absolutePath
-            } else {
-                it
-            }
-        }
-    ext.set(key, value)
-}
-signing {
-    sign(publishing.publications)
-}
+            val repository = "StefanLobbenmeier/kotlin-process"
 
-nexusPublishing {
-    packageGroup.set(myGroup)
-    repositories {
-        sonatype {
-            username.set(ossrhUsername)
-            password.set(ossrhPassword)
+            name = "StefanLobbenmeier"
+            url = uri("https://maven.pkg.github.com/$repository")
+
+            credentials {
+                username = "StefanLobbenmeier"
+                password = System.getenv("GITHUB_TOKEN")
+            }
         }
+
     }
 }
